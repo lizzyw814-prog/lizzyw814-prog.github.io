@@ -3,64 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>全自动听写器 | 智能语音双模式</title>
-    <!-- 加载 ResponsiveVoice 在线语音库（备用方案） -->
-    <script src="https://code.responsivevoice.org/responsivevoice.js?key=3oQaBe4B"></script>
+    <title>纯本地语音听写器 | 无网络依赖</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #eef2ff; margin: 0; min-height: 100vh; padding: 16px; display: flex; justify-content: center; align-items: center; }
-        .card { max-width: 700px; width: 100%; background: white; border-radius: 2rem; box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15); padding: 1.5rem; }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #eef2ff;
+            margin: 0;
+            min-height: 100vh;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card {
+            max-width: 700px;
+            width: 100%;
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15);
+            padding: 1.5rem;
+        }
         h1 { font-size: 1.6rem; margin: 0 0 0.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .sub { color: #4b5563; margin-bottom: 1.2rem; font-size: 0.85rem; border-left: 4px solid #8b5cf6; padding-left: 0.75rem; }
-        .wordbank-section { transition: all 0.2s; margin-bottom: 1rem; }
-        .wordbank-section.hidden { display: none; }
-        textarea { width: 100%; padding: 1rem; font-size: 1rem; font-family: monospace; border: 1px solid #cbd5e1; border-radius: 1.25rem; background: #fefce8; resize: vertical; outline: none; }
-        .settings-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem; background: #f9fafb; padding: 12px; border-radius: 1.5rem; align-items: center; }
-        .voice-selector { flex: 2; display: flex; align-items: center; gap: 8px; background: white; padding: 5px 12px; border-radius: 40px; border: 1px solid #e2e8f0; }
-        .voice-selector select { flex: 1; border: none; background: transparent; font-size: 0.85rem; outline: none; }
-        .test-voice-btn { background: #8b5cf6; color: white; border: none; border-radius: 30px; padding: 6px 12px; font-size: 0.75rem; cursor: pointer; }
-        .interval-item { display: flex; align-items: center; gap: 8px; background: white; padding: 5px 12px; border-radius: 40px; border: 1px solid #e2e8f0; }
-        .interval-item input { width: 65px; border: none; font-size: 0.9rem; text-align: center; }
-        button { border: none; border-radius: 60px; font-weight: 600; cursor: pointer; transition: 0.1s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .big-start { width: 100%; background: #10b981; color: white; font-size: 2rem; padding: 20px; margin: 12px 0; border-radius: 80px; font-weight: bold; }
-        .big-start:active { transform: scale(0.98); background: #059669; }
-        .control-row { display: flex; gap: 12px; margin: 8px 0; }
-        .control-row button { flex: 1; padding: 12px; background: #e2e8f0; color: #1f2937; font-size: 1rem; }
+        .permission-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 1rem;
+            padding: 12px;
+            margin: 12px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .permission-box button {
+            background: #ffc107;
+            color: #333;
+            padding: 8px 16px;
+            margin-top: 8px;
+            border: none;
+            border-radius: 40px;
+            font-weight: bold;
+        }
+        .diagnostic {
+            background: #f9fafb;
+            border-radius: 1rem;
+            padding: 12px;
+            margin-bottom: 1rem;
+            font-size: 0.8rem;
+            border: 1px solid #e2e8f0;
+        }
+        .voice-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 5px 12px;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+            margin: 8px 0;
+        }
+        .voice-selector select {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .test-voice-btn {
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            font-family: monospace;
+            border: 1px solid #cbd5e1;
+            border-radius: 1.25rem;
+            background: #fefce8;
+            resize: vertical;
+            margin: 10px 0;
+        }
+        .interval-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 5px 12px;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        button {
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .big-start {
+            width: 100%;
+            background: #10b981;
+            color: white;
+            font-size: 2rem;
+            padding: 20px;
+            margin: 12px 0;
+            border-radius: 80px;
+        }
+        .control-row {
+            display: flex;
+            gap: 12px;
+            margin: 8px 0;
+        }
+        .control-row button {
+            flex: 1;
+            padding: 12px;
+            background: #e2e8f0;
+            color: #1f2937;
+            font-size: 1rem;
+        }
         .stop-btn { background: #ef4444; color: white; }
-        .hidden-area { background: #f1f5f9; border-radius: 1rem; padding: 16px; text-align: center; margin: 12px 0; border: 2px dashed #8b5cf6; }
-        .hidden-area p { margin: 0; color: #334155; font-weight: 500; }
-        .history-box { background: #f1f5f9; border-radius: 1rem; padding: 10px; margin-top: 12px; transition: 0.2s; }
+        .hidden-area {
+            background: #f1f5f9;
+            border-radius: 1rem;
+            padding: 16px;
+            text-align: center;
+            margin: 12px 0;
+            border: 2px dashed #8b5cf6;
+        }
+        .history-box {
+            background: #f1f5f9;
+            border-radius: 1rem;
+            padding: 10px;
+            margin-top: 12px;
+        }
         .history-box.hidden { display: none; }
-        .history-title { font-weight: 600; display: flex; justify-content: space-between; margin-bottom: 6px; }
-        .history-list { display: flex; flex-wrap: wrap; gap: 8px; max-height: 120px; overflow-y: auto; }
-        .history-badge { background: white; padding: 4px 12px; border-radius: 30px; font-family: monospace; font-size: 0.8rem; }
-        .note { font-size: 0.7rem; color: #6b7280; text-align: center; margin-top: 1rem; }
-        .voice-mode-switch { background: #f0f9ff; border-radius: 40px; padding: 8px 12px; margin: 8px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-        .switch-label { font-size: 0.85rem; font-weight: 500; }
-        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-        input:checked + .slider { background-color: #10b981; }
-        input:checked + .slider:before { transform: translateX(20px); }
-        .status-warning { background: #fff3cd; color: #856404; padding: 8px; border-radius: 12px; margin: 8px 0; font-size: 0.8rem; text-align: center; }
-        @media (max-width: 550px) { .card { padding: 1rem; } .big-start { font-size: 1.5rem; padding: 16px; } }
+        .history-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .history-badge {
+            background: white;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-family: monospace;
+        }
+        .note {
+            font-size: 0.7rem;
+            color: #6b7280;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        @media (max-width: 550px) {
+            .card { padding: 1rem; }
+            .big-start { font-size: 1.5rem; padding: 16px; }
+        }
     </style>
 </head>
 <body>
 <div class="card">
-    <h1>📢 全自动听写器 <span style="font-size: 0.7rem;">🔒 无干扰模式</span></h1>
-    <div class="sub">孩子自己操作 · 屏幕不显示单词 · 智能语音双模式</div>
+    <h1>📢 纯本地语音听写器 <span style="font-size: 0.7rem;">🔒 无网络依赖</span></h1>
+    <div class="sub">孩子自己操作 · 屏幕不显示单词 · 使用系统自带语音</div>
 
-    <!-- 语音模式切换栏 -->
-    <div class="voice-mode-switch">
-        <span class="switch-label">🎙️ 使用在线语音（如本地无声音请开启）</span>
-        <label class="toggle-switch">
-            <input type="checkbox" id="onlineVoiceToggle">
-            <span class="slider"></span>
-        </label>
+    <!-- 授权提示区域（首次点击启用语音） -->
+    <div id="permissionBox" class="permission-box">
+        ⚠️ 浏览器需要您点击下方按钮来启用语音功能<br>
+        <button id="enableVoiceBtn">🎤 点击此处授权语音</button>
     </div>
-    <div id="voiceStatus" class="status-warning" style="display:none;"></div>
+
+    <!-- 诊断面板 -->
+    <div class="diagnostic" id="diagnosticPanel">
+        <p>🔍 语音状态：<span id="voiceStatus">未授权</span></p>
+        <div class="voice-selector" id="voiceSelector" style="display:none;">
+            <span>🗣️ 选择语音：</span>
+            <select id="voiceSelect"></select>
+            <button id="testVoiceBtn" class="test-voice-btn">试听</button>
+        </div>
+    </div>
 
     <!-- 词库编辑区 -->
     <div id="wordbankSection" class="wordbank-section">
@@ -73,20 +198,14 @@
     </div>
 
     <!-- 设置栏 -->
-    <div class="settings-bar">
-        <div class="voice-selector">
-            <span>🗣️</span>
-            <select id="voiceSelect" disabled></select>
-            <button id="testVoiceBtn" class="test-voice-btn" disabled>试听</button>
-        </div>
+    <div class="control-row" style="justify-content: space-between;">
         <div class="interval-item">
-            <span>⏱️</span>
-            <input type="number" id="intervalSec" min="1" max="10" step="0.5" value="3">
-            <span>秒</span>
+            <span>⏱️ 间隔(秒)</span>
+            <input type="number" id="intervalSec" min="1" max="10" step="0.5" value="3" style="width:65px;">
         </div>
     </div>
 
-    <button id="fullAutoBtn" class="big-start">🎧 开始全自动听写</button>
+    <button id="fullAutoBtn" class="big-start" disabled>🎧 开始全自动听写</button>
 
     <div class="control-row">
         <button id="stopAutoBtn" class="stop-btn">⏹️ 停止</button>
@@ -110,35 +229,37 @@
 
     <div class="note">
         💡 使用说明：<br>
-        1️⃣ 家长先帮忙输入要听写的单词（一行一个）。<br>
-        2️⃣ 如果设备没有声音，请开启「使用在线语音」开关（需要联网）。<br>
-        3️⃣ 孩子点击【开始全自动听写】→ 自动乱序、自动连续播报，屏幕全程不显示单词。<br>
-        4️⃣ 如需中途停止，点击【停止】；结束后可查看历史记录核对答案。<br>
-        ✅ 在线语音模式无需安装任何软件，只要设备能上网即可。
+        1️⃣ 首次使用请点击「点击此处授权语音」按钮（浏览器安全策略需要用户交互）。<br>
+        2️⃣ 授权后，系统会自动检测可用的语音引擎，您可以在下拉框中挑选合适的发音人。<br>
+        3️⃣ 点击【试听】按钮测试是否有声音，如有声音则听写功能正常。<br>
+        4️⃣ 若仍然无声，请检查学习机系统的“文字转语音”设置（设置→语言与输入法→文字转语音输出），确保已启用并选择了一个语音引擎（如讯飞语记、Google TTS等）。<br>
+        5️⃣ 家长输入单词后，孩子点击绿色大按钮即可全自动听写，屏幕全程隐藏单词。
     </div>
 </div>
 
 <script>
     // DOM 元素
-    const textarea = document.getElementById('wordListInput');
+    const enableVoiceBtn = document.getElementById('enableVoiceBtn');
+    const permissionBox = document.getElementById('permissionBox');
+    const voiceStatusSpan = document.getElementById('voiceStatus');
+    const voiceSelectorDiv = document.getElementById('voiceSelector');
     const voiceSelect = document.getElementById('voiceSelect');
     const testVoiceBtn = document.getElementById('testVoiceBtn');
-    const intervalSecInput = document.getElementById('intervalSec');
     const fullAutoBtn = document.getElementById('fullAutoBtn');
     const shuffleOnlyBtn = document.getElementById('shuffleOnlyBtn');
     const stopAutoBtn = document.getElementById('stopAutoBtn');
     const hideBankBtn = document.getElementById('hideBankBtn');
     const showBankBtn = document.getElementById('showBankBtn');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const textarea = document.getElementById('wordListInput');
+    const intervalSecInput = document.getElementById('intervalSec');
     const doneCountSpan = document.getElementById('doneCount');
     const leftCountSpan = document.getElementById('leftCount');
     const historyListDiv = document.getElementById('historyList');
     const wordbankSection = document.getElementById('wordbankSection');
     const historyBox = document.getElementById('historyBox');
-    const onlineVoiceToggle = document.getElementById('onlineVoiceToggle');
-    const voiceStatusDiv = document.getElementById('voiceStatus');
 
-    // 数据
+    // 核心数据
     let shuffledQueue = [];
     let currentIndex = 0;
     let history = [];
@@ -146,93 +267,72 @@
     let isAutoPlaying = false;
     let speechSynth = window.speechSynthesis;
     let availableVoices = [];
-    let useOnlineVoice = false; // 是否使用在线语音
+    let isVoiceReady = false;      // 语音是否已初始化并可用
 
-    // 检测本地语音可用性
-    let localVoiceAvailable = false;
-    function checkLocalVoice() {
-        if (!speechSynth) return false;
+    // 语音初始化：尝试获取语音列表
+    function initVoices() {
+        if (!speechSynth) {
+            voiceStatusSpan.innerText = '❌ 浏览器不支持语音合成';
+            return false;
+        }
+        // 获取语音列表
         const voices = speechSynth.getVoices();
-        return voices && voices.length > 0;
-    }
-
-    // 更新UI：根据本地语音可用性和在线开关，调整控件状态
-    function updateVoiceUI() {
-        localVoiceAvailable = checkLocalVoice();
-        if (localVoiceAvailable) {
-            // 本地语音可用，且未开启在线模式时，启用本地选择器
-            if (!useOnlineVoice) {
-                voiceSelect.disabled = false;
-                testVoiceBtn.disabled = false;
-                // 填充语音列表（如果还没填充）
-                if (availableVoices.length === 0) loadVoices();
-                voiceStatusDiv.style.display = 'none';
-            } else {
-                voiceSelect.disabled = true;
-                testVoiceBtn.disabled = true;
-                voiceStatusDiv.style.display = 'block';
-                voiceStatusDiv.innerHTML = '🔊 当前使用在线语音模式（无需本地引擎）';
-                voiceStatusDiv.style.background = '#e6ffed';
-                voiceStatusDiv.style.color = '#0e5e2e';
-            }
+        if (voices && voices.length > 0) {
+            availableVoices = voices;
+            populateVoiceList();
+            voiceStatusSpan.innerText = `✅ 已加载 ${availableVoices.length} 个语音引擎`;
+            voiceSelectorDiv.style.display = 'flex';
+            return true;
         } else {
-            // 本地语音不可用，强制使用在线语音，并隐藏本地选择器
-            if (!useOnlineVoice) {
-                // 如果用户没开，自动建议开启
-                voiceStatusDiv.style.display = 'block';
-                voiceStatusDiv.innerHTML = '⚠️ 未检测到本地语音引擎，请开启「使用在线语音」开关。';
-                voiceStatusDiv.style.background = '#fff3cd';
-                voiceStatusDiv.style.color = '#856404';
-            } else {
-                voiceStatusDiv.style.display = 'block';
-                voiceStatusDiv.innerHTML = '✅ 在线语音模式已启用，可正常听写。';
-                voiceStatusDiv.style.background = '#e6ffed';
-                voiceStatusDiv.style.color = '#0e5e2e';
-            }
-            voiceSelect.disabled = true;
-            testVoiceBtn.disabled = true;
+            voiceStatusSpan.innerText = '⏳ 正在加载语音引擎...';
+            // 延迟重试（有些浏览器需要异步加载）
+            setTimeout(() => {
+                const voices2 = speechSynth.getVoices();
+                if (voices2 && voices2.length > 0) {
+                    availableVoices = voices2;
+                    populateVoiceList();
+                    voiceStatusSpan.innerText = `✅ 已加载 ${availableVoices.length} 个语音引擎`;
+                    voiceSelectorDiv.style.display = 'flex';
+                } else {
+                    voiceStatusSpan.innerText = '❌ 未检测到语音引擎，请检查系统 TTS 设置';
+                }
+            }, 500);
+            return false;
         }
     }
 
-    // 加载本地语音列表
-    function loadVoices() {
-        if (!speechSynth) return;
-        availableVoices = speechSynth.getVoices();
-        if (availableVoices.length === 0) {
-            setTimeout(loadVoices, 100);
-            return;
-        }
-        populateVoiceList();
-        updateVoiceUI();
-    }
-
+    // 填充语音下拉框
     function populateVoiceList() {
         voiceSelect.innerHTML = '';
-        const preferred = availableVoices.filter(v => v.lang.startsWith('zh') || v.lang.startsWith('en'));
-        const list = preferred.length ? preferred : availableVoices;
-        for (let voice of list) {
+        // 按语言分组显示
+        const sorted = [...availableVoices].sort((a,b) => a.lang.localeCompare(b.lang));
+        for (let voice of sorted) {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = `${voice.name} (${voice.lang})`;
             voiceSelect.appendChild(option);
         }
-        const defaultVoice = list.find(v => v.lang.includes('zh') && (v.name.includes('Ting') || v.name.includes('Xiaoxiao') || v.name.includes('Meijia')));
+        // 默认选择中文语音（如果有），否则选第一个
+        let defaultVoice = availableVoices.find(v => v.lang.startsWith('zh'));
+        if (!defaultVoice) defaultVoice = availableVoices[0];
         if (defaultVoice) voiceSelect.value = defaultVoice.name;
     }
 
+    // 获取当前选中的语音对象
     function getSelectedVoice() {
-        return availableVoices.find(v => v.name === voiceSelect.value) || null;
+        const selectedName = voiceSelect.value;
+        return availableVoices.find(v => v.name === selectedName) || null;
     }
 
-    // 本地语音测试
-    function testLocalVoice() {
-        if (!localVoiceAvailable) {
-            alert("本地语音不可用，请开启在线语音模式");
+    // 测试语音
+    function testSpeech() {
+        if (!isVoiceReady) {
+            alert("语音尚未就绪，请先点击授权按钮并等待语音引擎加载");
             return;
         }
-        const voice = getSelectedVoice();
-        const testText = "你好，Hello，测试语音";
+        const testText = "你好，世界。Hello world。测试语音。";
         const utterance = new SpeechSynthesisUtterance(testText);
+        const voice = getSelectedVoice();
         if (voice) utterance.voice = voice;
         else utterance.lang = 'zh-CN';
         utterance.rate = 0.9;
@@ -240,45 +340,22 @@
         speechSynth.speak(utterance);
     }
 
-    // 在线语音测试
-    function testOnlineVoice() {
-        const testText = "你好，Hello，测试语音";
-        responsiveVoice.speak(testText, "UK English Female", { rate: 0.9 });
-    }
-
-    // 统一的试听按钮
-    function testVoice() {
-        if (useOnlineVoice) {
-            testOnlineVoice();
-        } else {
-            testLocalVoice();
-        }
-    }
-
-    // 统一的播报函数
+    // 播报单词（不记录历史，不移动索引）
     function speakWord(word, callback) {
-        if (useOnlineVoice) {
-            // 使用 ResponsiveVoice 在线播报
-            // 自动检测语言：如果包含中文则用中文女声，否则用英文女声
-            const hasChinese = /[\u4e00-\u9fff]/.test(word);
-            const voiceName = hasChinese ? "Chinese Female" : "UK English Female";
-            responsiveVoice.speak(word, voiceName, { rate: 0.85, onend: callback });
-        } else {
-            // 本地语音
-            if (!speechSynth) {
-                if (callback) callback();
-                return;
-            }
-            if (speechSynth.speaking) speechSynth.cancel();
-            const utterance = new SpeechSynthesisUtterance(word);
-            const voice = getSelectedVoice();
-            if (voice) utterance.voice = voice;
-            else utterance.lang = /[\u4e00-\u9fff]/.test(word) ? 'zh-CN' : 'en-US';
-            utterance.rate = 0.85;
-            utterance.onend = () => callback && callback();
-            utterance.onerror = () => callback && callback();
-            speechSynth.speak(utterance);
+        if (!isVoiceReady) {
+            console.warn("语音未就绪");
+            if (callback) callback();
+            return;
         }
+        if (speechSynth.speaking) speechSynth.cancel();
+        const utterance = new SpeechSynthesisUtterance(word);
+        const voice = getSelectedVoice();
+        if (voice) utterance.voice = voice;
+        else utterance.lang = /[\u4e00-\u9fff]/.test(word) ? 'zh-CN' : 'en-US';
+        utterance.rate = 0.85;
+        utterance.onend = () => callback && callback();
+        utterance.onerror = () => callback && callback();
+        speechSynth.speak(utterance);
     }
 
     // 解析输入
@@ -346,13 +423,14 @@
             autoIntervalId = null;
         }
         isAutoPlaying = false;
-        if (!useOnlineVoice && speechSynth && speechSynth.speaking) {
-            speechSynth.cancel();
-        }
-        // 在线语音无法主动停止，但停止自动即可
+        if (speechSynth && speechSynth.speaking) speechSynth.cancel();
     }
 
     function startFullAuto() {
+        if (!isVoiceReady) {
+            alert("语音尚未就绪，请先点击授权按钮并等待语音引擎加载");
+            return;
+        }
         if (isAutoPlaying) {
             stopAuto();
             setTimeout(() => startFullAutoInternal(), 200);
@@ -370,7 +448,6 @@
             alert("所有单词已经听写完毕！如需重新听写，请先点击「仅乱序」重置。");
             return;
         }
-        // 隐藏词库和旧历史
         wordbankSection.classList.add('hidden');
         historyBox.classList.add('hidden');
         if (autoIntervalId) clearInterval(autoIntervalId);
@@ -381,14 +458,9 @@
             if (!isAutoPlaying) return;
             if (currentIndex >= shuffledQueue.length) {
                 stopAuto();
-                // 完成提示
-                const completeMsg = useOnlineVoice ? null : new SpeechSynthesisUtterance("听写完成！");
-                if (completeMsg) {
-                    completeMsg.lang = "zh-CN";
-                    speechSynth.speak(completeMsg);
-                } else {
-                    responsiveVoice.speak("听写完成！", "Chinese Female");
-                }
+                const completeMsg = new SpeechSynthesisUtterance("听写完成！");
+                completeMsg.lang = "zh-CN";
+                speechSynth.speak(completeMsg);
                 showHistory();
                 return;
             }
@@ -402,8 +474,7 @@
         playNext();
         autoIntervalId = setInterval(() => {
             if (!isAutoPlaying) return;
-            // 如果还在播放，等待
-            if (!useOnlineVoice && speechSynth && speechSynth.speaking) return;
+            if (speechSynth.speaking) return; // 等待播完
             if (currentIndex >= shuffledQueue.length) {
                 stopAuto();
                 showHistory();
@@ -417,13 +488,9 @@
                 if (currentIndex >= shuffledQueue.length) {
                     stopAuto();
                     showHistory();
-                    const doneMsg = useOnlineVoice ? null : new SpeechSynthesisUtterance("全部听写完毕");
-                    if (doneMsg) {
-                        doneMsg.lang = "zh-CN";
-                        speechSynth.speak(doneMsg);
-                    } else {
-                        responsiveVoice.speak("全部听写完毕", "Chinese Female");
-                    }
+                    const doneMsg = new SpeechSynthesisUtterance("全部听写完毕");
+                    doneMsg.lang = "zh-CN";
+                    speechSynth.speak(doneMsg);
                 }
             });
         }, intervalSec * 1000);
@@ -435,13 +502,9 @@
             if (!confirm("乱序会重置当前进度，确定吗？")) return;
         }
         shuffleAndReset();
-        const msg = useOnlineVoice ? null : new SpeechSynthesisUtterance(`已乱序，共${shuffledQueue.length}项`);
-        if (msg) {
-            msg.lang = "zh-CN";
-            speechSynth.speak(msg);
-        } else {
-            responsiveVoice.speak(`已乱序，共${shuffledQueue.length}项`, "Chinese Female");
-        }
+        const msg = new SpeechSynthesisUtterance(`已乱序，共${shuffledQueue.length}项`);
+        msg.lang = "zh-CN";
+        speechSynth.speak(msg);
     }
 
     function hideWordbank() { wordbankSection.classList.add('hidden'); }
@@ -450,42 +513,65 @@
         wordbankSection.classList.remove('hidden');
     }
 
-    // 监听在线语音开关变化
-    function onOnlineVoiceToggle() {
-        useOnlineVoice = onlineVoiceToggle.checked;
-        updateVoiceUI();
-    }
-
-    // 初始化语音和事件
-    function init() {
-        testVoiceBtn.addEventListener('click', testVoice);
-        fullAutoBtn.addEventListener('click', startFullAuto);
-        shuffleOnlyBtn.addEventListener('click', onlyShuffle);
-        stopAutoBtn.addEventListener('click', stopAuto);
-        hideBankBtn.addEventListener('click', hideWordbank);
-        showBankBtn.addEventListener('click', showWordbank);
-        clearHistoryBtn.addEventListener('click', clearHistory);
-        onlineVoiceToggle.addEventListener('change', onOnlineVoiceToggle);
-
-        if (speechSynth) {
-            if (speechSynth.onvoiceschanged !== undefined) {
-                speechSynth.onvoiceschanged = loadVoices;
-            }
-            loadVoices();
-        } else {
-            // 没有本地语音API，强制在线模式
-            onlineVoiceToggle.checked = true;
-            useOnlineVoice = true;
-            updateVoiceUI();
+    // 授权语音（用户点击按钮后启用所有功能）
+    function enableVoice() {
+        // 隐藏授权提示框
+        permissionBox.style.display = 'none';
+        // 初始化语音
+        if (!speechSynth) {
+            voiceStatusSpan.innerText = '❌ 浏览器不支持语音合成';
+            return;
         }
-
-        // 初始示例
-        textarea.value = "apple\nbeautiful\n中国\n坚持不懈\nrun away";
-        shuffleAndReset();
-        updateUI();
+        // 尝试获取语音列表
+        const voices = speechSynth.getVoices();
+        if (voices && voices.length > 0) {
+            availableVoices = voices;
+            populateVoiceList();
+            voiceStatusSpan.innerText = `✅ 已加载 ${availableVoices.length} 个语音引擎`;
+            voiceSelectorDiv.style.display = 'flex';
+            isVoiceReady = true;
+            fullAutoBtn.disabled = false;
+            // 可选：播放一个欢迎语，让用户确认有声音
+            const welcome = new SpeechSynthesisUtterance("语音已启用，请点击试听按钮选择合适的声音");
+            welcome.lang = "zh-CN";
+            speechSynth.speak(welcome);
+        } else {
+            // 延迟重试
+            voiceStatusSpan.innerText = '⏳ 正在加载语音引擎...';
+            setTimeout(() => {
+                const voices2 = speechSynth.getVoices();
+                if (voices2 && voices2.length > 0) {
+                    availableVoices = voices2;
+                    populateVoiceList();
+                    voiceStatusSpan.innerText = `✅ 已加载 ${availableVoices.length} 个语音引擎`;
+                    voiceSelectorDiv.style.display = 'flex';
+                    isVoiceReady = true;
+                    fullAutoBtn.disabled = false;
+                    const welcome = new SpeechSynthesisUtterance("语音已启用");
+                    welcome.lang = "zh-CN";
+                    speechSynth.speak(welcome);
+                } else {
+                    voiceStatusSpan.innerText = '❌ 未检测到语音引擎，请检查系统 TTS 设置';
+                    fullAutoBtn.disabled = true;
+                }
+            }, 500);
+        }
     }
 
-    init();
+    // 事件绑定
+    enableVoiceBtn.addEventListener('click', enableVoice);
+    testVoiceBtn.addEventListener('click', testSpeech);
+    fullAutoBtn.addEventListener('click', startFullAuto);
+    shuffleOnlyBtn.addEventListener('click', onlyShuffle);
+    stopAutoBtn.addEventListener('click', stopAuto);
+    hideBankBtn.addEventListener('click', hideWordbank);
+    showBankBtn.addEventListener('click', showWordbank);
+    clearHistoryBtn.addEventListener('click', clearHistory);
+
+    // 初始示例
+    textarea.value = "apple\nbeautiful\n中国\n坚持不懈\nrun away";
+    shuffleAndReset();
+    updateUI();
 </script>
 </body>
 </html>
