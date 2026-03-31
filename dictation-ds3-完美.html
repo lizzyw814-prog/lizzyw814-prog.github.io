@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>儿童全自动听写器 | 无干扰模式</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none; /* 避免长按菜单，不影响输入 */
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #eef2ff;
+            margin: 0;
+            min-height: 100vh;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card {
+            max-width: 700px;
+            width: 100%;
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15);
+            padding: 1.5rem;
+        }
+        h1 {
+            font-size: 1.6rem;
+            margin: 0 0 0.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .sub {
+            color: #4b5563;
+            margin-bottom: 1.2rem;
+            font-size: 0.85rem;
+            border-left: 4px solid #8b5cf6;
+            padding-left: 0.75rem;
+        }
+        /* 词库编辑区域（听写时完全隐藏） */
+        .wordbank-section {
+            transition: all 0.2s;
+            margin-bottom: 1rem;
+        }
+        .wordbank-section.hidden {
+            display: none;
+        }
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            font-family: monospace;
+            border: 1px solid #cbd5e1;
+            border-radius: 1.25rem;
+            background: #fefce8;
+            resize: vertical;
+            outline: none;
+        }
+        textarea:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139,92,246,0.2);
+        }
+        .settings-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 1rem;
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 1.5rem;
+            align-items: center;
+        }
+        .voice-selector {
+            flex: 2;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 5px 12px;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .voice-selector select {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .test-voice-btn {
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        .interval-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 5px 12px;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .interval-item input {
+            width: 65px;
+            border: none;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        button {
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.1s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .big-start {
+            width: 100%;
+            background: #10b981;
+            color: white;
+            font-size: 2rem;
+            padding: 20px;
+            margin: 12px 0;
+            border-radius: 80px;
+            font-weight: bold;
+        }
+        .big-start:active { transform: scale(0.98); background: #059669; }
+        .control-row {
+            display: flex;
+            gap: 12px;
+            margin: 8px 0;
+        }
+        .control-row button {
+            flex: 1;
+            padding: 12px;
+            background: #e2e8f0;
+            color: #1f2937;
+            font-size: 1rem;
+        }
+        .stop-btn { background: #ef4444; color: white; }
+        .hidden-area {
+            background: #f1f5f9;
+            border-radius: 1rem;
+            padding: 16px;
+            text-align: center;
+            margin: 12px 0;
+            border: 2px dashed #8b5cf6;
+        }
+        .hidden-area p {
+            margin: 0;
+            color: #334155;
+            font-weight: 500;
+        }
+        /* 历史区域（听写时隐藏） */
+        .history-box {
+            background: #f1f5f9;
+            border-radius: 1rem;
+            padding: 10px;
+            margin-top: 12px;
+            transition: 0.2s;
+        }
+        .history-box.hidden {
+            display: none;
+        }
+        .history-title {
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .history-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .history-badge {
+            background: white;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+        .note {
+            font-size: 0.7rem;
+            color: #6b7280;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        @media (max-width: 550px) {
+            .card { padding: 1rem; }
+            .big-start { font-size: 1.5rem; padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>📢 全自动听写器 <span style="font-size: 0.7rem;">🔒 无干扰模式</span></h1>
+    <div class="sub">孩子自己操作 · 屏幕不显示单词 · 可试听语音</div>
+
+    <!-- 词库编辑区（可隐藏） -->
+    <div id="wordbankSection" class="wordbank-section">
+        <label>📝 输入要听写的内容（一行一个）</label>
+        <textarea id="wordListInput" rows="5" placeholder="apple&#10;美丽的&#10;run away&#10;中国&#10;坚持不懈"></textarea>
+        <div class="control-row">
+            <button id="hideBankBtn" style="background:#334155; color:white;">🙈 隐藏词库（开始前可先隐藏）</button>
+            <button id="shuffleOnlyBtn" style="background:#f97316; color:white;">🔀 仅乱序</button>
+        </div>
+    </div>
+
+    <!-- 设置栏：语音选择+试听 + 间隔 -->
+    <div class="settings-bar">
+        <div class="voice-selector">
+            <span>🗣️</span>
+            <select id="voiceSelect"></select>
+            <button id="testVoiceBtn" class="test-voice-btn">试听</button>
+        </div>
+        <div class="interval-item">
+            <span>⏱️</span>
+            <input type="number" id="intervalSec" min="1" max="10" step="0.5" value="3">
+            <span>秒</span>
+        </div>
+    </div>
+
+    <!-- 超大启动按钮：全自动听写 -->
+    <button id="fullAutoBtn" class="big-start">🎧 开始全自动听写</button>
+
+    <!-- 辅助按钮（停止、显示词库） -->
+    <div class="control-row">
+        <button id="stopAutoBtn" class="stop-btn">⏹️ 停止</button>
+        <button id="showBankBtn" style="background:#64748b; color:white;">📖 显示词库</button>
+    </div>
+
+    <!-- 听写时的隐藏提示区（永远不显示单词） -->
+    <div class="hidden-area">
+        <p>🔇 听写进行中 · 屏幕不会显示单词</p>
+        <p>✅ 已播报: <span id="doneCount">0</span> &nbsp;|&nbsp; 📋 剩余: <span id="leftCount">0</span></p>
+    </div>
+
+    <!-- 历史记录（听写结束后才显示，中途隐藏） -->
+    <div id="historyBox" class="history-box hidden">
+        <div class="history-title">
+            📜 本次听写历史（结束后显示）
+            <button id="clearHistoryBtn" style="background:transparent; padding:2px 8px;">清空</button>
+        </div>
+        <div id="historyList" class="history-list">
+            <span style="color:#9ca3af;">暂无</span>
+        </div>
+    </div>
+
+    <div class="note">
+        💡 使用说明（孩子可独立操作）：<br>
+        1️⃣ 家长先帮忙输入要听写的单词（一行一个）。<br>
+        2️⃣ 在“语音选择”中挑选喜欢的发音人，点击【试听】确认。<br>
+        3️⃣ 孩子点击【开始全自动听写】→ 自动乱序、自动连续播报，屏幕全程不显示单词。<br>
+        4️⃣ 如需中途停止，点击【停止】；结束后可查看历史记录核对答案。<br>
+        ✅ 完全无干扰，适合孩子自主听写。
+    </div>
+</div>
+
+<script>
+    // DOM 元素
+    const textarea = document.getElementById('wordListInput');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const testVoiceBtn = document.getElementById('testVoiceBtn');
+    const intervalSecInput = document.getElementById('intervalSec');
+    const fullAutoBtn = document.getElementById('fullAutoBtn');
+    const shuffleOnlyBtn = document.getElementById('shuffleOnlyBtn');
+    const stopAutoBtn = document.getElementById('stopAutoBtn');
+    const hideBankBtn = document.getElementById('hideBankBtn');
+    const showBankBtn = document.getElementById('showBankBtn');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const doneCountSpan = document.getElementById('doneCount');
+    const leftCountSpan = document.getElementById('leftCount');
+    const historyListDiv = document.getElementById('historyList');
+    const wordbankSection = document.getElementById('wordbankSection');
+    const historyBox = document.getElementById('historyBox');
+
+    // 数据
+    let shuffledQueue = [];      // 乱序队列
+    let currentIndex = 0;       // 下一个播报索引
+    let history = [];            // 已播报内容（用于结束后显示）
+    let autoIntervalId = null;
+    let isAutoPlaying = false;
+    let speechSynth = window.speechSynthesis;
+    let availableVoices = [];
+
+    // 加载语音列表
+    function loadVoices() {
+        availableVoices = speechSynth.getVoices();
+        if (availableVoices.length === 0) {
+            setTimeout(loadVoices, 100);
+            return;
+        }
+        populateVoiceList();
+    }
+
+    function populateVoiceList() {
+        voiceSelect.innerHTML = '';
+        const preferred = availableVoices.filter(v => v.lang.startsWith('zh') || v.lang.startsWith('en'));
+        const list = preferred.length ? preferred : availableVoices;
+        for (let voice of list) {
+            const option = document.createElement('option');
+            option.value = voice.name;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            voiceSelect.appendChild(option);
+        }
+        // 默认选一个好听的中文
+        const defaultVoice = list.find(v => v.lang.includes('zh') && (v.name.includes('Ting') || v.name.includes('Xiaoxiao') || v.name.includes('Meijia')));
+        if (defaultVoice) voiceSelect.value = defaultVoice.name;
+    }
+
+    function getSelectedVoice() {
+        return availableVoices.find(v => v.name === voiceSelect.value) || null;
+    }
+
+    // 试听按钮：念一句测试文字
+    function testVoice() {
+        const voice = getSelectedVoice();
+        const testText = "你好，Hello，测试语音";
+        const utterance = new SpeechSynthesisUtterance(testText);
+        if (voice) utterance.voice = voice;
+        else utterance.lang = 'zh-CN';
+        utterance.rate = 0.9;
+        speechSynth.cancel();
+        speechSynth.speak(utterance);
+    }
+
+    // 播报单词（不记录历史，不移动索引）
+    function speakWord(word, callback) {
+        if (!word) return;
+        if (speechSynth.speaking) speechSynth.cancel();
+        const utterance = new SpeechSynthesisUtterance(word);
+        const voice = getSelectedVoice();
+        if (voice) utterance.voice = voice;
+        else utterance.lang = /[\u4e00-\u9fff]/.test(word) ? 'zh-CN' : 'en-US';
+        utterance.rate = 0.85;
+        utterance.onend = () => callback && callback();
+        utterance.onerror = () => callback && callback();
+        speechSynth.speak(utterance);
+    }
+
+    // 从文本框解析单词
+    function parseItems() {
+        return textarea.value.split(/\r?\n/).map(l => l.trim()).filter(l => l !== "");
+    }
+
+    // 乱序并重置（清空历史，重置索引）
+    function shuffleAndReset() {
+        const items = parseItems();
+        if (items.length === 0) {
+            alert("请先输入听写内容");
+            return false;
+        }
+        const shuffled = [...items];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        shuffledQueue = shuffled;
+        currentIndex = 0;
+        history = [];
+        updateUI();
+        // 听写结束后才显示历史，所以先隐藏历史框
+        historyBox.classList.add('hidden');
+        return true;
+    }
+
+    // 更新进度显示
+    function updateUI() {
+        const total = shuffledQueue.length;
+        const done = currentIndex;
+        const left = total - done;
+        doneCountSpan.innerText = done;
+        leftCountSpan.innerText = left;
+    }
+
+    // 显示历史记录（听写结束后调用）
+    function showHistory() {
+        if (history.length === 0) {
+            historyListDiv.innerHTML = '<span style="color:#9ca3af;">无历史记录</span>';
+        } else {
+            let html = '';
+            history.forEach(item => {
+                html += `<span class="history-badge">${escapeHtml(item)}</span>`;
+            });
+            historyListDiv.innerHTML = html;
+        }
+        historyBox.classList.remove('hidden');
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function clearHistory() {
+        history = [];
+        showHistory(); // 刷新显示
+    }
+
+    // 停止自动听写
+    function stopAuto() {
+        if (autoIntervalId) {
+            clearInterval(autoIntervalId);
+            autoIntervalId = null;
+        }
+        isAutoPlaying = false;
+        if (speechSynth.speaking) speechSynth.cancel();
+        // 不自动显示历史，等用户手动或结束后
+    }
+
+    // 全自动听写（核心）
+    function startFullAuto() {
+        if (isAutoPlaying) {
+            stopAuto();
+            setTimeout(() => startFullAutoInternal(), 200);
+            return;
+        }
+        startFullAutoInternal();
+    }
+
+    function startFullAutoInternal() {
+        if (shuffledQueue.length === 0) {
+            const success = shuffleAndReset();
+            if (!success) return;
+        }
+        if (currentIndex >= shuffledQueue.length) {
+            alert("所有单词已经听写完毕！如需重新听写，请先点击「仅乱序」重置。");
+            return;
+        }
+        // 确保词库区域隐藏（防偷看）
+        wordbankSection.classList.add('hidden');
+        // 隐藏历史框（听写过程中不显示历史）
+        historyBox.classList.add('hidden');
+        
+        if (autoIntervalId) clearInterval(autoIntervalId);
+        isAutoPlaying = true;
+
+        const intervalSec = parseFloat(intervalSecInput.value);
+        // 立即播第一个
+        function playNext() {
+            if (!isAutoPlaying) return;
+            if (currentIndex >= shuffledQueue.length) {
+                // 听写完成
+                stopAuto();
+                const completeMsg = new SpeechSynthesisUtterance("听写完成！");
+                completeMsg.lang = "zh-CN";
+                speechSynth.speak(completeMsg);
+                // 显示历史记录，供孩子核对
+                showHistory();
+                return;
+            }
+            const word = shuffledQueue[currentIndex];
+            speakWord(word, () => {
+                // 播完后记录历史
+                history.push(word);
+                currentIndex++;
+                updateUI();
+                // 继续下一个（由定时器驱动）
+            });
+        }
+        playNext(); // 立即播第一个
+        autoIntervalId = setInterval(() => {
+            if (!isAutoPlaying) return;
+            if (speechSynth.speaking) return; // 等当前播完
+            if (currentIndex >= shuffledQueue.length) {
+                stopAuto();
+                showHistory();
+                return;
+            }
+            const word = shuffledQueue[currentIndex];
+            speakWord(word, () => {
+                history.push(word);
+                currentIndex++;
+                updateUI();
+                if (currentIndex >= shuffledQueue.length) {
+                    stopAuto();
+                    showHistory();
+                    const doneMsg = new SpeechSynthesisUtterance("全部听写完毕");
+                    doneMsg.lang = "zh-CN";
+                    speechSynth.speak(doneMsg);
+                }
+            });
+        }, intervalSec * 1000);
+    }
+
+    // 仅乱序（不自动播放）
+    function onlyShuffle() {
+        if (isAutoPlaying) stopAuto();
+        if (shuffledQueue.length > 0 && currentIndex < shuffledQueue.length) {
+            if (!confirm("乱序会重置当前进度，确定吗？")) return;
+        }
+        shuffleAndReset();
+        // 词库区域不自动隐藏，让家长可以编辑
+        const msg = new SpeechSynthesisUtterance(`已乱序，共${shuffledQueue.length}项`);
+        msg.lang = "zh-CN";
+        speechSynth.speak(msg);
+    }
+
+    // 手动隐藏/显示词库
+    function hideWordbank() {
+        wordbankSection.classList.add('hidden');
+    }
+    function showWordbank() {
+        if (isAutoPlaying) {
+            alert("请先停止听写再显示词库");
+            return;
+        }
+        wordbankSection.classList.remove('hidden');
+    }
+
+    // 初始化事件
+    function init() {
+        testVoiceBtn.addEventListener('click', testVoice);
+        fullAutoBtn.addEventListener('click', startFullAuto);
+        shuffleOnlyBtn.addEventListener('click', onlyShuffle);
+        stopAutoBtn.addEventListener('click', stopAuto);
+        hideBankBtn.addEventListener('click', hideWordbank);
+        showBankBtn.addEventListener('click', showWordbank);
+        clearHistoryBtn.addEventListener('click', clearHistory);
+        
+        if (speechSynth.onvoiceschanged !== undefined) {
+            speechSynth.onvoiceschanged = loadVoices;
+        }
+        loadVoices();
+        // 预设示例
+        textarea.value = "apple\nbeautiful\n中国\n坚持不懈\nrun away";
+        shuffleAndReset(); // 初始化队列但不播放
+        updateUI();
+    }
+
+    init();
+</script>
+</body>
+</html>
