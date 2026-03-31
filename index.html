@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>纯本地语音听写器 | 无网络依赖</title>
+    <title>纯本地语音听写器 | 记忆语音版</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -168,8 +168,8 @@
 </head>
 <body>
 <div class="card">
-    <h1>📢 纯本地语音听写器 <span style="font-size: 0.7rem;">🔒 无网络依赖</span></h1>
-    <div class="sub">孩子自己操作 · 屏幕不显示单词 · 使用系统自带语音</div>
+    <h1>📢 纯本地语音听写器 <span style="font-size: 0.7rem;">🔒 记忆语音</span></h1>
+    <div class="sub">孩子自己操作 · 屏幕不显示单词 · 记住上次选择的语音</div>
 
     <!-- 授权提示区域（首次点击启用语音） -->
     <div id="permissionBox" class="permission-box">
@@ -230,7 +230,7 @@
     <div class="note">
         💡 使用说明：<br>
         1️⃣ 首次使用请点击「点击此处授权语音」按钮（浏览器安全策略需要用户交互）。<br>
-        2️⃣ 授权后，系统会自动检测可用的语音引擎，您可以在下拉框中挑选合适的发音人。<br>
+        2️⃣ 授权后，系统会自动检测可用的语音引擎，您可以在下拉框中挑选合适的发音人，并会记住您的选择。<br>
         3️⃣ 点击【试听】按钮测试是否有声音，如有声音则听写功能正常。<br>
         4️⃣ 若仍然无声，请检查学习机系统的“文字转语音”设置（设置→语言与输入法→文字转语音输出），确保已启用并选择了一个语音引擎（如讯飞语记、Google TTS等）。<br>
         5️⃣ 家长输入单词后，孩子点击绿色大按钮即可全自动听写，屏幕全程隐藏单词。
@@ -269,13 +269,40 @@
     let availableVoices = [];
     let isVoiceReady = false;      // 语音是否已初始化并可用
 
+    // 填充语音下拉框（并恢复上次选择的语音）
+    function populateVoiceList() {
+        voiceSelect.innerHTML = '';
+        const sorted = [...availableVoices].sort((a,b) => a.lang.localeCompare(b.lang));
+        for (let voice of sorted) {
+            const option = document.createElement('option');
+            option.value = voice.name;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            voiceSelect.appendChild(option);
+        }
+
+        // 恢复上次选择的语音（localStorage）
+        const lastVoice = localStorage.getItem('lastSelectedVoice');
+        let selectedVoice = null;
+        if (lastVoice) {
+            selectedVoice = availableVoices.find(v => v.name === lastVoice);
+        }
+        // 如果没有上次选择的语音或上次选择的语音已不存在，则使用默认中文语音或第一个
+        if (!selectedVoice) {
+            selectedVoice = availableVoices.find(v => v.lang.startsWith('zh')) || availableVoices[0];
+        }
+        if (selectedVoice) {
+            voiceSelect.value = selectedVoice.name;
+            // 确保存储一致（比如上次存储的语音在当前列表中不存在时，更新为新选中的）
+            localStorage.setItem('lastSelectedVoice', selectedVoice.name);
+        }
+    }
+
     // 语音初始化：尝试获取语音列表
     function initVoices() {
         if (!speechSynth) {
             voiceStatusSpan.innerText = '❌ 浏览器不支持语音合成';
             return false;
         }
-        // 获取语音列表
         const voices = speechSynth.getVoices();
         if (voices && voices.length > 0) {
             availableVoices = voices;
@@ -285,7 +312,6 @@
             return true;
         } else {
             voiceStatusSpan.innerText = '⏳ 正在加载语音引擎...';
-            // 延迟重试（有些浏览器需要异步加载）
             setTimeout(() => {
                 const voices2 = speechSynth.getVoices();
                 if (voices2 && voices2.length > 0) {
@@ -299,23 +325,6 @@
             }, 500);
             return false;
         }
-    }
-
-    // 填充语音下拉框
-    function populateVoiceList() {
-        voiceSelect.innerHTML = '';
-        // 按语言分组显示
-        const sorted = [...availableVoices].sort((a,b) => a.lang.localeCompare(b.lang));
-        for (let voice of sorted) {
-            const option = document.createElement('option');
-            option.value = voice.name;
-            option.textContent = `${voice.name} (${voice.lang})`;
-            voiceSelect.appendChild(option);
-        }
-        // 默认选择中文语音（如果有），否则选第一个
-        let defaultVoice = availableVoices.find(v => v.lang.startsWith('zh'));
-        if (!defaultVoice) defaultVoice = availableVoices[0];
-        if (defaultVoice) voiceSelect.value = defaultVoice.name;
     }
 
     // 获取当前选中的语音对象
@@ -474,7 +483,7 @@
         playNext();
         autoIntervalId = setInterval(() => {
             if (!isAutoPlaying) return;
-            if (speechSynth.speaking) return; // 等待播完
+            if (speechSynth.speaking) return;
             if (currentIndex >= shuffledQueue.length) {
                 stopAuto();
                 showHistory();
@@ -522,7 +531,6 @@
             voiceStatusSpan.innerText = '❌ 浏览器不支持语音合成';
             return;
         }
-        // 尝试获取语音列表
         const voices = speechSynth.getVoices();
         if (voices && voices.length > 0) {
             availableVoices = voices;
@@ -531,12 +539,10 @@
             voiceSelectorDiv.style.display = 'flex';
             isVoiceReady = true;
             fullAutoBtn.disabled = false;
-            // 可选：播放一个欢迎语，让用户确认有声音
             const welcome = new SpeechSynthesisUtterance("语音已启用，请点击试听按钮选择合适的声音");
             welcome.lang = "zh-CN";
             speechSynth.speak(welcome);
         } else {
-            // 延迟重试
             voiceStatusSpan.innerText = '⏳ 正在加载语音引擎...';
             setTimeout(() => {
                 const voices2 = speechSynth.getVoices();
@@ -567,6 +573,14 @@
     hideBankBtn.addEventListener('click', hideWordbank);
     showBankBtn.addEventListener('click', showWordbank);
     clearHistoryBtn.addEventListener('click', clearHistory);
+
+    // 监听语音选择变化，保存到 localStorage
+    voiceSelect.addEventListener('change', function() {
+        const selectedVoice = voiceSelect.value;
+        if (selectedVoice) {
+            localStorage.setItem('lastSelectedVoice', selectedVoice);
+        }
+    });
 
     // 初始示例
     textarea.value = "apple\nbeautiful\n中国\n坚持不懈\nrun away";
